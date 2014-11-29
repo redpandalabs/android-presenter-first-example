@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.app.ListFragment;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -15,6 +14,8 @@ import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.util.Collection;
+import java.util.LinkedList;
 
 public class ContactLayout extends Activity {
 
@@ -24,19 +25,30 @@ public class ContactLayout extends Activity {
         setContentView(R.layout.contact_layout);
     }
 
-    public static class ContactListFragment extends ListFragment {
+    public static class ContactListFragment extends ListFragment implements ContactListView {
+        private ArrayAdapter<Contact> adapter;
+        private LinkedList<Runnable> selectionChanged = new LinkedList<>();
+
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
 
-            setListAdapter(new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_activated_1, Shakespeare.TITLES));
+            adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_activated_1, Shakespeare.TITLES);
+            setListAdapter(adapter);
 
             getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         }
 
         @Override
         public void onListItemClick(ListView l, View v, int position, long id) {
+            fireSelectionChanged();
             showDetails(position);
+        }
+
+        private void fireSelectionChanged() {
+            for (Runnable l: selectionChanged) {
+                l.run();
+            }
         }
 
         void showDetails(int index) {
@@ -56,6 +68,22 @@ public class ContactLayout extends Activity {
                 ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
                 ft.commit();
             }
+        }
+
+        @Override
+        public void setContacts(Collection<Contact> contacts) {
+            adapter.clear();
+            adapter.addAll(contacts);
+        }
+
+        @Override
+        public int selectedIndex() {
+            return getListView().getCheckedItemPosition();
+        }
+
+        @Override
+        public void whenSelectionChanged(Runnable listener) {
+            selectionChanged.add(listener);
         }
     }
 
