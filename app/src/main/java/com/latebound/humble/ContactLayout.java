@@ -20,6 +20,8 @@ import java.util.LinkedList;
 
 public class ContactLayout extends Activity {
 
+    private Contact contact;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,12 +33,14 @@ public class ContactLayout extends Activity {
         model.whenContactsChanged(() -> view.setContacts(model.contacts()));
         view.whenSelectionChanged(() -> model.selectByIndex(view.selectedIndex()));
         view.whenInitialized(() -> model.setContacts(Arrays.asList(Shakespeare.TITLES)));
+
+        model.whenSelectionChanged(() -> contact = model.selectedContact());
     }
 
     public static class ContactListFragment extends ListFragment implements ContactListView {
         private ArrayAdapter<Contact> adapter;
         private LinkedList<Runnable> selectionChanged = new LinkedList<>();
-        private LinkedList<Runnable> initializedListeners = new LinkedList<>();
+        private LinkedList<Runnable> initialized = new LinkedList<>();
 
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
@@ -47,23 +51,17 @@ public class ContactLayout extends Activity {
 
             getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 
-            fireInitialized();
+            fire(initialized);
         }
 
         @Override
         public void onListItemClick(ListView l, View v, int position, long id) {
-            fireSelectionChanged();
+            fire(selectionChanged);
             showDetails(position);
         }
 
-        private void fireSelectionChanged() {
-            for (Runnable l: selectionChanged) {
-                l.run();
-            }
-        }
-
-        private void fireInitialized() {
-            for (Runnable l: initializedListeners) {
+        private void fire(Collection<Runnable> listeners) {
+            for (Runnable l: listeners) {
                 l.run();
             }
         }
@@ -104,7 +102,7 @@ public class ContactLayout extends Activity {
 
         @Override
         public void whenInitialized(Runnable listener) {
-            initializedListeners.add(listener);
+            initialized.add(listener);
         }
     }
 

@@ -2,17 +2,25 @@ package com.latebound.humble;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by latebound on 11/28/14.
  */
 public class InMemoryContactListModel implements ContactListModel {
-    private Collection<Contact> contacts = new ArrayList<>();
+    private List<Contact> contacts = new ArrayList<>();
     private Collection<Runnable> contactsChanged = new ArrayList<>();
+    private Collection<Runnable> selectionChanged = new ArrayList<>();
+    private int selectedIndex;
 
     @Override
     public void whenContactsChanged(Runnable listener) {
         contactsChanged.add(listener);
+    }
+
+    @Override
+    public void whenSelectionChanged(Runnable listener) {
+        selectionChanged.add(listener);
     }
 
     @Override
@@ -21,18 +29,24 @@ public class InMemoryContactListModel implements ContactListModel {
     }
 
     @Override
-    public void setContacts(Collection<Contact> contacts) {
+    public void setContacts(List<Contact> contacts) {
         this.contacts = contacts;
-        fireContactsChanged();
+        fire(contactsChanged);
     }
 
     @Override
     public void selectByIndex(int index) {
-        System.out.println("... SELECTED ... " + index);
+        selectedIndex = index;
+        fire(selectionChanged);
     }
 
-    private void fireContactsChanged() {
-        for (Runnable l: contactsChanged) {
+    @Override
+    public Contact selectedContact() {
+        return contacts.get(selectedIndex);
+    }
+
+    private void fire(Collection<Runnable> listeners) {
+        for (Runnable l: listeners) {
             l.run();
         }
     }
