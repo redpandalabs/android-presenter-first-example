@@ -11,4 +11,6 @@ public interface ContactListView {
     int selectedIndex();
 
     void whenSelectionChanged(Runnable listener);
+
+    void whenInitialized(Runnable listener);
 }

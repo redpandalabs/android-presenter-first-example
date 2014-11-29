@@ -14,6 +14,7 @@ import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -23,20 +24,30 @@ public class ContactLayout extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.contact_layout);
+
+        ContactListModel model = new InMemoryContactListModel();
+        ContactListView view = (ContactListView) getFragmentManager().findFragmentById(R.id.titles);
+
+        model.whenContactsChanged(() -> view.setContacts(model.contacts()));
+        view.whenSelectionChanged(() -> model.selectByIndex(view.selectedIndex()));
+        view.whenInitialized(() -> model.setContacts(Arrays.asList(Shakespeare.TITLES)));
     }
 
     public static class ContactListFragment extends ListFragment implements ContactListView {
         private ArrayAdapter<Contact> adapter;
         private LinkedList<Runnable> selectionChanged = new LinkedList<>();
+        private LinkedList<Runnable> initializedListeners = new LinkedList<>();
 
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
 
-            adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_activated_1, Shakespeare.TITLES);
+            adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_activated_1);
             setListAdapter(adapter);
 
             getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+
+            fireInitialized();
         }
 
         @Override
@@ -51,8 +62,13 @@ public class ContactLayout extends Activity {
             }
         }
 
-        void showDetails(int index) {
+        private void fireInitialized() {
+            for (Runnable l: initializedListeners) {
+                l.run();
+            }
+        }
 
+        void showDetails(int index) {
             getListView().setItemChecked(index, true);
 
             DetailsFragment details = (DetailsFragment) getFragmentManager().findFragmentById(R.id.details);
@@ -84,6 +100,11 @@ public class ContactLayout extends Activity {
         @Override
         public void whenSelectionChanged(Runnable listener) {
             selectionChanged.add(listener);
+        }
+
+        @Override
+        public void whenInitialized(Runnable listener) {
+            initializedListeners.add(listener);
         }
     }
 
