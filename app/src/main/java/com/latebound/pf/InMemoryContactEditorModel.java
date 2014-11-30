@@ -9,6 +9,7 @@ import java.util.LinkedList;
 public class InMemoryContactEditorModel implements ContactEditorModel {
     private Contact contact;
     private Collection<Runnable> contactInfoChanged = new LinkedList<>();
+    private Collection<Runnable> contactSaved = new LinkedList<>();
 
     @Override
     public void whenContactInfoChanged(Runnable listener) {
@@ -38,17 +39,16 @@ public class InMemoryContactEditorModel implements ContactEditorModel {
     @Override
     public void setCurrentContact(Contact contact) {
         this.contact = contact;
-        fire(contactInfoChanged);
+        Events.fire(contactInfoChanged);
     }
 
     @Override
     public void save() {
-
+        Events.fire(contactSaved);
     }
 
-    private void fire(Collection<Runnable> listeners) {
-        for (Runnable l: listeners) {
-            l.run();
-        }
+    @Override
+    public void whenContactSaved(Runnable listener) {
+        contactSaved.add(listener);
     }
 }

@@ -17,4 +17,6 @@ public interface ContactEditorModel {
     void setCurrentContact(Contact contact);
 
     void save();
+
+    void whenContactSaved(Runnable listener);
 }

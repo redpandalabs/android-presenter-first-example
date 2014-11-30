@@ -31,23 +31,17 @@ public class InMemoryContactListModel implements ContactListModel {
     @Override
     public void setContacts(List<Contact> contacts) {
         this.contacts = contacts;
-        fire(contactsChanged);
+        Events.fire(contactsChanged);
     }
 
     @Override
     public void selectByIndex(int index) {
         selectedIndex = index;
-        fire(selectionChanged);
+        Events.fire(selectionChanged);
     }
 
     @Override
     public Contact selectedContact() {
         return contacts.get(selectedIndex);
-    }
-
-    private void fire(Collection<Runnable> listeners) {
-        for (Runnable l: listeners) {
-            l.run();
-        }
     }
 }
