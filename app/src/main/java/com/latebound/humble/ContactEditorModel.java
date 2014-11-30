@@ -14,5 +14,7 @@ public interface ContactEditorModel {
 
     void setContactEmail(String contactEmail);
 
+    void setCurrentContact(Contact contact);
+
     void save();
 }

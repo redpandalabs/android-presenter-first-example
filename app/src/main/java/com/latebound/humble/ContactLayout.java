@@ -2,7 +2,6 @@ package com.latebound.humble;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.app.ListFragment;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -30,11 +29,19 @@ public class ContactLayout extends Activity {
         ContactListModel model = new InMemoryContactListModel();
         ContactListView view = (ContactListView) getFragmentManager().findFragmentById(R.id.titles);
 
-        model.whenContactsChanged(() -> view.setContacts(model.contacts()));
-        view.whenSelectionChanged(() -> model.selectByIndex(view.selectedIndex()));
-        view.whenInitialized(() -> model.setContacts(Arrays.asList(Shakespeare.TITLES)));
+        new ContactListPresenter(model, view);
 
-        model.whenSelectionChanged(() -> contact = model.selectedContact());
+        ContactEditorModel editorModel = new InMemoryContactEditorModel();
+        ContactEditorView editorView = (ContactEditorView) getFragmentManager().findFragmentById(R.id.details);
+
+        model.whenSelectionChanged(() -> {
+            contact = model.selectedContact();
+            editorModel.setCurrentContact(contact);
+        });
+
+        editorModel.whenContactInfoChanged(() -> {
+            System.out.println(editorModel.contactEmail());
+        });
     }
 
     public static class ContactListFragment extends ListFragment implements ContactListView {
@@ -57,30 +64,12 @@ public class ContactLayout extends Activity {
         @Override
         public void onListItemClick(ListView l, View v, int position, long id) {
             fire(selectionChanged);
-            showDetails(position);
+            getListView().setItemChecked(position, true);
         }
 
         private void fire(Collection<Runnable> listeners) {
             for (Runnable l: listeners) {
                 l.run();
-            }
-        }
-
-        void showDetails(int index) {
-            getListView().setItemChecked(index, true);
-
-            DetailsFragment details = (DetailsFragment) getFragmentManager().findFragmentById(R.id.details);
-            if (details == null || details.getShownIndex() != index) {
-                details = DetailsFragment.newInstance(index);
-
-                FragmentTransaction ft = getFragmentManager().beginTransaction();
-                if (index == 0) {
-                    ft.replace(R.id.details, details);
-                } else {
-                    ft.replace(R.id.details, details);
-                }
-                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-                ft.commit();
             }
         }
 
@@ -106,20 +95,9 @@ public class ContactLayout extends Activity {
         }
     }
 
-    public static class DetailsFragment extends Fragment {
-        public static DetailsFragment newInstance(int index) {
-            DetailsFragment f = new DetailsFragment();
-
-            Bundle args = new Bundle();
-            args.putInt("index", index);
-            f.setArguments(args);
-
-            return f;
-        }
-
-        public int getShownIndex() {
-            return getArguments().getInt("index", 0);
-        }
+    public static class DetailsFragment extends Fragment implements ContactEditorView {
+        private TextView name;
+        private TextView email;
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -129,13 +107,51 @@ public class ContactLayout extends Activity {
             }
 
             ScrollView scroller = new ScrollView(getActivity());
-            TextView text = new TextView(getActivity());
             int padding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                     4, getActivity().getResources().getDisplayMetrics());
-            text.setPadding(padding, padding, padding, padding);
-            scroller.addView(text);
-            text.setText(Shakespeare.DIALOGUE[getShownIndex()]);
+
+            name = new TextView(getActivity());
+            name.setPadding(padding, padding, padding, padding);
+            scroller.addView(name);
+
+            email = new TextView(getActivity());
+            email.setPadding(padding, padding, padding, padding);
+            scroller.addView(email);
+
             return scroller;
+        }
+
+        @Override
+        public void setName(String name) {
+            this.name.setText(name);
+        }
+
+        @Override
+        public void setEmail(String email) {
+            this.email.setText(email);
+        }
+
+        @Override
+        public String contactName() {
+            return name.getText().toString();
+        }
+
+        @Override
+        public String contactEmail() {
+            return email.getText().toString();
+        }
+
+        @Override
+        public void whenUserSaved(Runnable listener) {
+
+        }
+    }
+
+    private class ContactListPresenter {
+        public ContactListPresenter(ContactListModel model, ContactListView view) {
+            model.whenContactsChanged(() -> view.setContacts(model.contacts()));
+            view.whenSelectionChanged(() -> model.selectByIndex(view.selectedIndex()));
+            view.whenInitialized(() -> model.setContacts(Arrays.asList(Shakespeare.TITLES)));
         }
     }
 }

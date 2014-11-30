@@ -4,8 +4,8 @@ package com.latebound.humble;
  * Created by latebound on 11/29/14.
  */
 public class Contact {
-    private final String name;
-    private final String email;
+    private String name;
+    private String email;
 
     public Contact(String name, String email) {
         this.name = name;
@@ -18,6 +18,14 @@ public class Contact {
 
     public String email() {
         return email;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     @Override
