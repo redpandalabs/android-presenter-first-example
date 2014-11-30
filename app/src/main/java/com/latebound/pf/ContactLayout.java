@@ -1,17 +1,15 @@
-package com.latebound.humble;
+package com.latebound.pf;
 
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.ListFragment;
 import android.os.Bundle;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.ScrollView;
-import android.widget.TextView;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,12 +67,6 @@ public class ContactLayout extends Activity {
             getListView().setItemChecked(position, true);
         }
 
-        private void fire(Collection<Runnable> listeners) {
-            for (Runnable l: listeners) {
-                l.run();
-            }
-        }
-
         @Override
         public void setContacts(Collection<Contact> contacts) {
             adapter.clear();
@@ -95,28 +87,28 @@ public class ContactLayout extends Activity {
         public void whenInitialized(Runnable listener) {
             initialized.add(listener);
         }
+
+        private void fire(Collection<Runnable> listeners) {
+            for (Runnable l: listeners) {
+                l.run();
+            }
+        }
     }
 
     public static class ContactEditorFragment extends Fragment implements ContactEditorView {
-        private TextView name;
-        private TextView email;
+        private EditText name;
+        private EditText email;
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            ScrollView scroller = new ScrollView(getActivity());
-            int padding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                    4, getActivity().getResources().getDisplayMetrics());
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            return inflater.inflate(R.layout.contact_editor_fragment, container, false);
+        }
 
-            name = new TextView(getActivity());
-            name.setPadding(padding, padding, padding, padding);
-//            scroller.addView(name);
-
-            email = new TextView(getActivity());
-            email.setPadding(padding, padding, padding, padding);
-            scroller.addView(email);
-
-            return scroller;
+        @Override
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
+            name = (EditText) getActivity().findViewById(R.id.name);
+            email = (EditText) getActivity().findViewById(R.id.email);
         }
 
         @Override
