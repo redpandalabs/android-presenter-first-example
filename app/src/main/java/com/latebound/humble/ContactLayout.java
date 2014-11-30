@@ -16,6 +16,7 @@ import android.widget.TextView;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 
 public class ContactLayout extends Activity {
 
@@ -40,14 +41,15 @@ public class ContactLayout extends Activity {
         });
 
         editorModel.whenContactInfoChanged(() -> {
-            System.out.println(editorModel.contactEmail());
+            editorView.setName(contact.name());
+            editorView.setEmail(contact.email());
         });
     }
 
     public static class ContactListFragment extends ListFragment implements ContactListView {
         private ArrayAdapter<Contact> adapter;
-        private LinkedList<Runnable> selectionChanged = new LinkedList<>();
-        private LinkedList<Runnable> initialized = new LinkedList<>();
+        private List<Runnable> selectionChanged = new LinkedList<>();
+        private List<Runnable> initialized = new LinkedList<>();
 
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
@@ -95,24 +97,20 @@ public class ContactLayout extends Activity {
         }
     }
 
-    public static class DetailsFragment extends Fragment implements ContactEditorView {
+    public static class ContactEditorFragment extends Fragment implements ContactEditorView {
         private TextView name;
         private TextView email;
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            if (container == null) {
-                return null;
-            }
-
             ScrollView scroller = new ScrollView(getActivity());
             int padding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                     4, getActivity().getResources().getDisplayMetrics());
 
             name = new TextView(getActivity());
             name.setPadding(padding, padding, padding, padding);
-            scroller.addView(name);
+//            scroller.addView(name);
 
             email = new TextView(getActivity());
             email.setPadding(padding, padding, padding, padding);
